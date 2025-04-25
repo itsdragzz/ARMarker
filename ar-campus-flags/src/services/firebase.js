@@ -1,16 +1,17 @@
-// src/firebase/config.js
+// src/services/firebase.js
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
+// Your web app's Firebase configuration
+// Replace these with your actual Firebase project values from the Firebase console
 const firebaseConfig = {
-  // Replace with your Firebase project configuration
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBXh_W8yk8Jwjn7NVJFTDo5-iU2kcWgAus",
+  authDomain: "armarker-23486.firebaseapp.com",
+  projectId: "armarker-23486",
+  storageBucket: "armarker-23486.appspot.com",
+  messagingSenderId: "323454470195",
+  appId: "1:323454470195:web:c6f8a76efb9e824e6a3924"
 };
 
 // Initialize Firebase

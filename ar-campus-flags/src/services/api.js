@@ -6,9 +6,7 @@ import {
   getDoc, 
   addDoc, 
   doc, 
-  query,
   Timestamp,
-  GeoPoint,
   where,
   orderBy,
   limit
@@ -76,7 +74,7 @@ export const createFlag = async (flagData) => {
       createdAt: Timestamp.now()
     };
     
-    // Add to regular Firestore collection
+    // Add to Firestore collection
     const flagsRef = collection(db, 'flags');
     const docRef = await addDoc(flagsRef, newFlag);
     

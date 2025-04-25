@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import useGeolocation from '../hooks/useGeolocation';
 import useCamera from '../hooks/useCamera';
 import { createFlag } from '../services/api';
+import { parseFirebaseError, logFirebaseError } from '../utils/firebaseErrorHandler';
 import '../styles/createflag.css';
 
 const FLAG_COLORS = [
@@ -40,6 +41,7 @@ const CreateFlag = () => {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   // Start camera for preview
   useEffect(() => {
@@ -68,6 +70,8 @@ const CreateFlag = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSubmitSuccess(false);
     
     if (!location) {
       setError('Location is not available. Please enable location services.');
@@ -89,14 +93,31 @@ const CreateFlag = () => {
         longitude: location.longitude,
       };
       
-      // Send to API
-      await createFlag(flagData);
+      console.log("Submitting flag data:", flagData);
       
-      // Navigate to AR view to see the flag
-      navigate('/ar');
+      // Send to API
+      const result = await createFlag(flagData);
+      console.log("Flag created successfully:", result);
+      
+      setSubmitSuccess(true);
+      
+      // Reset form
+      setFormData({
+        title: '',
+        message: '',
+        author: '',
+        category: 'Question',
+        color: '#3498db',
+      });
+      
+      // Navigate to AR view after a short delay
+      setTimeout(() => {
+        navigate('/ar');
+      }, 2000);
+      
     } catch (err) {
-      console.error('Error creating flag:', err);
-      setError('Failed to create flag. Please try again.');
+      logFirebaseError(err, 'createFlag');
+      setError(parseFirebaseError(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -119,6 +140,13 @@ const CreateFlag = () => {
       
       {/* Error message */}
       {error && <div className="error-message">{error}</div>}
+      
+      {/* Success message */}
+      {submitSuccess && (
+        <div className="success-message">
+          Flag created successfully! Redirecting to AR view...
+        </div>
+      )}
       
       {/* Preview mode */}
       {isPreviewMode && (
