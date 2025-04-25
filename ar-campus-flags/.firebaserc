@@ -1,5 +1,7 @@
 {
-  "projects"; {
-    "default"; "armarket-75443296"
-  }
+  "projects": {
+    "default": "armarker-23486"
+  },
+  "targets": {},
+  "etags": {}
 }
