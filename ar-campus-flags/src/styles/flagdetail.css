@@ -1,0 +1,97 @@
+/* src/styles/flagdetail.css */
+.flag-detail-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .flag-detail-container {
+    background-color: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    position: relative;
+  }
+  
+  .close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    z-index: 10;
+  }
+  
+  .flag-header {
+    padding: 15px;
+    color: white;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  
+  .flag-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+  }
+  
+  .flag-content {
+    padding: 20px;
+  }
+  
+  .flag-message {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  
+  .flag-meta {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .flag-date, .flag-author {
+    margin: 5px 0;
+  }
+  
+  .flag-category {
+    margin-top: 10px;
+  }
+  
+  .category-tag {
+    display: inline-block;
+    background-color: #f0f0f0;
+    color: #333;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 480px) {
+    .flag-detail-container {
+      width: 95%;
+    }
+    
+    .flag-header h2 {
+      font-size: 1.2rem;
+    }
+    
+    .flag-message {
+      font-size: 1rem;
+    }
+  }

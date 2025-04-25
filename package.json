@@ -1,0 +1,24 @@
+{
+  "name": "armarker",
+  "version": "1.0.0",
+  "description": "Macathon 2025",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itsdragzz/ARMarker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/itsdragzz/ARMarker/issues"
+  },
+  "homepage": "https://github.com/itsdragzz/ARMarker#readme",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.4.1",
+    "vite": "^6.3.3"
+  }
+}
