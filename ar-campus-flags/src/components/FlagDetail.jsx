@@ -5,10 +5,14 @@ const FlagDetail = ({ flag, onClose }) => {
   if (!flag) return null;
 
   // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown date';
+  const formatDate = (dateValue) => {
+    if (!dateValue) return 'Unknown date';
     
-    const date = new Date(dateString);
+    // Make sure we have a proper Date object
+    const date = typeof dateValue === 'object' && dateValue.toDate 
+      ? dateValue.toDate() 
+      : new Date(dateValue);
+    
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
