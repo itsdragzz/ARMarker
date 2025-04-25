@@ -1,0 +1,19 @@
+{
+    "indexes": [
+      {
+        "collectionGroup": "flags",
+        "queryScope": "COLLECTION",
+        "fields": [
+          {
+            "fieldPath": "g.geohash",
+            "order": "ASCENDING"
+          },
+          {
+            "fieldPath": "createdAt",
+            "order": "DESCENDING"
+          }
+        ]
+      }
+    ],
+    "fieldOverrides": []
+  }

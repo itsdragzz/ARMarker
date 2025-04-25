@@ -46,15 +46,15 @@ const ARView = () => {
   // Calculate flag positions relative to user location
   const getFlagPosition = (flag) => {
     if (!location) return [0, 0, 0];
-    
+
     // Very simplified calculation (not accurate for real world)
     // For a real implementation, you would use more complex geospatial calculations
     const latDiff = flag.latitude - location.latitude;
     const lngDiff = flag.longitude - location.longitude;
-    
+
     // Scale factors (arbitrary for this example)
     const scale = 10;
-    
+
     return [lngDiff * scale, 0, latDiff * scale];
   };
 
@@ -104,11 +104,11 @@ const ARView = () => {
         <Canvas>
           <ambientLight intensity={0.8} />
           <directionalLight position={[0, 10, 5]} intensity={1} />
-          
+
           <Suspense fallback={null}>
             {flags.map((flag) => (
               <Flag3D
-                key={flag._id || flag.id}
+                key={flag.id} // Changed from flag._id
                 position={getFlagPosition(flag)}
                 message={flag.message}
                 color={flag.color || '#3498db'}
@@ -116,7 +116,7 @@ const ARView = () => {
               />
             ))}
           </Suspense>
-          
+
           <OrbitControls enableZoom={false} enablePan={false} />
         </Canvas>
       </div>

@@ -1,58 +1,117 @@
 // src/services/api.js
-import axios from 'axios';
+import { db } from './firebase';
+import { 
+  collection, 
+  getDocs, 
+  getDoc, 
+  addDoc, 
+  doc, 
+  query, 
+  GeoPoint 
+} from 'firebase/firestore';
+import * as geofirestore from 'geofirestore';
 
-// Base URL for API calls - replace with your actual backend URL when deployed
-const API_URL = 'http://localhost:5000/api';
+// Initialize GeoFirestore
+const GeoFirestore = geofirestore.initializeApp(db);
+const geoFlagsCollection = GeoFirestore.collection('flags');
 
-// Create an axios instance
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Flag related API calls
+// Get all flags
 export const getAllFlags = async () => {
   try {
-    const response = await api.get('/flags');
-    return response.data;
+    const flagsSnapshot = await getDocs(collection(db, 'flags'));
+    const flags = flagsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      // Convert Firestore timestamp to Date for compatibility
+      createdAt: doc.data().createdAt?.toDate()
+    }));
+    return flags;
   } catch (error) {
     console.error('Error fetching flags:', error);
     throw error;
   }
 };
 
+// Get flags near a location
 export const getFlagsNearLocation = async (latitude, longitude, radius = 100) => {
   try {
-    const response = await api.get('/flags/nearby', {
-      params: { latitude, longitude, radius },
+    // Create a GeoQuery based on a location
+    const geoQuery = geoFlagsCollection.near({ 
+      center: new geofirestore.GeoPoint(latitude, longitude),
+      radius: radius / 1000 // Convert meters to kilometers
     });
-    return response.data;
+    
+    // Get query results
+    const snapshot = await geoQuery.get();
+    
+    // Format the data
+    const flags = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate()
+    }));
+    
+    return flags;
   } catch (error) {
     console.error('Error fetching nearby flags:', error);
     throw error;
   }
 };
 
+// Create a new flag
 export const createFlag = async (flagData) => {
   try {
-    const response = await api.post('/flags', flagData);
-    return response.data;
+    const { latitude, longitude, ...restData } = flagData;
+    
+    // Prepare the flag data for GeoFirestore
+    const newFlag = {
+      ...restData,
+      // GeoFirestore requires a coordinates field with a geopoint
+      coordinates: new geofirestore.GeoPoint(latitude, longitude),
+      // Keep latitude/longitude fields for easy access
+      latitude,
+      longitude,
+      createdAt: new Date()
+    };
+    
+    // Add the flag to GeoFirestore
+    const docRef = await geoFlagsCollection.add(newFlag);
+    
+    return {
+      id: docRef.id,
+      ...newFlag
+    };
   } catch (error) {
     console.error('Error creating flag:', error);
     throw error;
   }
 };
 
+// Get a specific flag by ID
 export const getFlagById = async (id) => {
   try {
-    const response = await api.get(`/flags/${id}`);
-    return response.data;
+    const flagDoc = await getDoc(doc(db, 'flags', id));
+    
+    if (!flagDoc.exists()) {
+      throw new Error('Flag not found');
+    }
+    
+    const flagData = flagDoc.data();
+    
+    return {
+      id: flagDoc.id,
+      ...flagData,
+      createdAt: flagData.createdAt?.toDate()
+    };
   } catch (error) {
     console.error(`Error fetching flag with id ${id}:`, error);
     throw error;
   }
 };
 
-export default api;
+export default {
+  getAllFlags,
+  getFlagsNearLocation,
+  getFlagById,
+  createFlag
+};

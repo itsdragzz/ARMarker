@@ -49,17 +49,17 @@ const MapView = () => {
           // Calculate relative position (very simplified)
           const latDiff = (flag.latitude - location.latitude) * 1000;
           const lngDiff = (flag.longitude - location.longitude) * 1000;
-          
+
           // Style to position the flag on our simple map
           const flagStyle = {
             left: `calc(50% + ${lngDiff}px)`,
             top: `calc(50% - ${latDiff}px)`,
             backgroundColor: flag.color || '#3498db'
           };
-          
+
           return (
-            <div 
-              key={flag._id || flag.id}
+            <div
+              key={flag.id} // Changed from flag._id
               className="map-flag"
               style={flagStyle}
               onClick={() => setSelectedFlag(flag)}
@@ -78,8 +78,8 @@ const MapView = () => {
       <div className="map-header">
         <h2>Campus Flags Map</h2>
         <p>
-          {location 
-            ? `Your location: ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}` 
+          {location
+            ? `Your location: ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`
             : 'Locating you...'}
         </p>
       </div>
@@ -98,9 +98,9 @@ const MapView = () => {
       )}
 
       {selectedFlag && (
-        <FlagDetail 
-          flag={selectedFlag} 
-          onClose={() => setSelectedFlag(null)} 
+        <FlagDetail
+          flag={selectedFlag}
+          onClose={() => setSelectedFlag(null)}
         />
       )}
 
