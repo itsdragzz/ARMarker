@@ -1,0 +1,5 @@
+<!-- public/assets/flag-icon.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path fill="none" d="M0 0h24v24H0z"/>
+  <path d="M19 4H6V2H4v18h2v-5h13a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1z" fill="currentColor"/>
+</svg>
