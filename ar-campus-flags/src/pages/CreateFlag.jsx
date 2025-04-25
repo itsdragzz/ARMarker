@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useGeolocation from '../hooks/useGeolocation';
 import useCamera from '../hooks/useCamera';
+import useDeviceOrientation from '../hooks/useDeviceOrientation';
 import { createFlag } from '../services/api';
 import { parseFirebaseError, logFirebaseError } from '../utils/firebaseErrorHandler';
 import '../styles/createflag.css';
@@ -29,6 +30,7 @@ const CreateFlag = () => {
   const navigate = useNavigate();
   const { location, loading: locationLoading } = useGeolocation();
   const { videoRef, startCamera, stopCamera } = useCamera();
+  const { orientation, error: orientationError } = useDeviceOrientation();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -56,6 +58,13 @@ const CreateFlag = () => {
     };
   }, [isPreviewMode]);
 
+  // Store current orientation in window for other components to access
+  useEffect(() => {
+    if (orientation) {
+      window.currentOrientation = orientation;
+    }
+  }, [orientation]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -78,6 +87,11 @@ const CreateFlag = () => {
       return;
     }
     
+    if (!orientation) {
+      setError('Device orientation is not available. Please enable device motion and orientation services.');
+      return;
+    }
+    
     if (!formData.message.trim()) {
       setError('Please enter a message for your flag.');
       return;
@@ -86,11 +100,16 @@ const CreateFlag = () => {
     try {
       setIsSubmitting(true);
       
-      // Prepare flag data with location
+      // Prepare flag data with location and orientation
       const flagData = {
         ...formData,
         latitude: location.latitude,
         longitude: location.longitude,
+        orientation: {
+          alpha: orientation.alpha, // compass direction
+          beta: orientation.beta,   // front-to-back tilt
+          gamma: orientation.gamma  // left-to-right tilt
+        }
       };
       
       console.log("Submitting flag data:", flagData);
@@ -127,7 +146,7 @@ const CreateFlag = () => {
     <div className="create-flag-container">
       <h2>Create a New Flag</h2>
       
-      {/* Location status */}
+      {/* Location and orientation status */}
       <div className="location-status">
         {locationLoading ? (
           <p>Getting your location...</p>
@@ -135,6 +154,12 @@ const CreateFlag = () => {
           <p>📍 Your location is available</p>
         ) : (
           <p className="error">⚠️ Unable to get your location</p>
+        )}
+        
+        {orientation ? (
+          <p>🧭 Device orientation ready (Facing: {Math.round(orientation.alpha)}°)</p>
+        ) : (
+          <p className="error">⚠️ Unable to get device orientation</p>
         )}
       </div>
       
@@ -163,6 +188,12 @@ const CreateFlag = () => {
             <h3>{formData.title || 'Flag Title'}</h3>
             <p>{formData.message || 'Your message will appear here'}</p>
           </div>
+          
+          {orientation && (
+            <div className="orientation-info">
+              Compass: {Math.round(orientation.alpha)}° | Tilt: {Math.round(orientation.beta)}°
+            </div>
+          )}
           
           <button className="exit-preview-btn" onClick={togglePreviewMode}>
             Exit Preview
@@ -244,6 +275,11 @@ const CreateFlag = () => {
             </div>
           </div>
           
+          <div className="placement-instructions">
+            <p><strong>Placement Instructions:</strong></p>
+            <p>When you create a flag, it will be placed in your current location at the direction your phone is facing. Make sure to point your camera in the direction you want the flag to appear.</p>
+          </div>
+          
           <div className="form-actions">
             <button
               type="button"
@@ -256,7 +292,7 @@ const CreateFlag = () => {
             <button
               type="submit"
               className="submit-btn"
-              disabled={isSubmitting || !location}
+              disabled={isSubmitting || !location || !orientation}
             >
               {isSubmitting ? 'Creating...' : 'Create Flag'}
             </button>

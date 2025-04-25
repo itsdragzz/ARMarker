@@ -1,22 +1,45 @@
 // src/components/Flag3D.jsx
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
+import * as THREE from 'three';
 
 const Flag3D = ({ position, message, color = '#3498db', onClick }) => {
   const flagRef = useRef();
   const poleRef = useRef();
+  const groupRef = useRef();
+  
+  // Calculate distance from origin (camera)
+  const distance = useMemo(() => {
+    return Math.sqrt(position[0] * position[0] + position[1] * position[1] + position[2] * position[2]);
+  }, [position]);
+  
+  // Scale based on distance (closer = bigger)
+  const scale = useMemo(() => {
+    // Base scale with minimum and maximum limits
+    return Math.max(0.5, Math.min(2, 2 / Math.max(1, distance * 0.2)));
+  }, [distance]);
   
   // Animate the flag slightly
   useFrame(({ clock }) => {
     if (flagRef.current) {
       // Gentle wave animation
       flagRef.current.position.y = Math.sin(clock.getElapsedTime() * 2) * 0.05 + position[1] + 0.5;
+      
+      // Always face the camera (billboarding)
+      if (groupRef.current) {
+        groupRef.current.lookAt(0, 0, 0);
+      }
     }
   });
 
   return (
-    <group position={position} onClick={onClick}>
+    <group 
+      ref={groupRef}
+      position={position}
+      onClick={onClick}
+      scale={[scale, scale, scale]}
+    >
       {/* Flag pole */}
       <mesh ref={poleRef}>
         <cylinderGeometry args={[0.03, 0.03, 1.5, 8]} />
@@ -26,7 +49,7 @@ const Flag3D = ({ position, message, color = '#3498db', onClick }) => {
       {/* Flag */}
       <mesh 
         ref={flagRef} 
-        position={[0.25, position[1] + 0.5, 0]}
+        position={[0.25, 0.5, 0]}
       >
         <planeGeometry args={[0.5, 0.3]} />
         <meshStandardMaterial color={color} side={2} />
@@ -34,7 +57,7 @@ const Flag3D = ({ position, message, color = '#3498db', onClick }) => {
       
       {/* Flag text preview (shows only a short preview) */}
       <Text
-        position={[0.25, position[1] + 0.5, 0.01]}
+        position={[0.25, 0.5, 0.01]}
         fontSize={0.04}
         maxWidth={0.45}
         color="white"

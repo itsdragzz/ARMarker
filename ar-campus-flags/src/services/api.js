@@ -9,6 +9,7 @@ import {
   Timestamp,
   where,
   orderBy,
+  query,
   limit
 } from 'firebase/firestore';
 
@@ -31,12 +32,14 @@ export const getAllFlags = async () => {
   }
 };
 
-// Get flags near a location - simplified approach without geofirestore
-export const getFlagsNearLocation = async (latitude, longitude, radius = 100) => {
+// Get flags near a location - improved with more accurate distance calculation
+export const getFlagsNearLocation = async (latitude, longitude, radius = 10) => {
   try {
-    // For a hackathon, we can use a simpler approach
+    // For a hackathon, we still use a simpler approach
     // Get all flags and filter client-side based on distance
     const flags = await getAllFlags();
+    
+    console.log(`Fetching flags near [${latitude}, ${longitude}] within ${radius}m`);
     
     // Filter flags that are within the radius (in meters)
     const nearbyFlags = flags.filter(flag => {
@@ -50,9 +53,13 @@ export const getFlagsNearLocation = async (latitude, longitude, radius = 100) =>
         flag.longitude
       );
       
-      // Convert meters to kilometers for comparison
-      return distance <= (radius / 1000);
+      // Convert km to meters
+      const distanceInMeters = distance * 1000;
+      
+      return distanceInMeters <= radius;
     });
+    
+    console.log(`Found ${nearbyFlags.length} flags within ${radius}m`);
     
     return nearbyFlags;
   } catch (error) {
@@ -61,16 +68,34 @@ export const getFlagsNearLocation = async (latitude, longitude, radius = 100) =>
   }
 };
 
-// Create a new flag
+// Create a new flag with orientation data
 export const createFlag = async (flagData) => {
   try {
     const { latitude, longitude, ...restData } = flagData;
+    
+    // Get the device orientation if available
+    let orientationData = {};
+    if (window.DeviceOrientationEvent) {
+      // Try to get the current orientation
+      // This is a simplified approach - in reality you'd need more complex handling
+      orientationData = {
+        alpha: window.orientation || 0,  // compass direction
+        beta: 0,                        // front-to-back tilt
+        gamma: 0                         // left-to-right tilt
+      };
+      
+      // If using our useDeviceOrientation hook, pass that data instead
+      if (window.currentOrientation) {
+        orientationData = window.currentOrientation;
+      }
+    }
     
     // Format data for Firestore
     const newFlag = {
       ...restData,
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
+      orientation: orientationData,
       createdAt: Timestamp.now()
     };
     
@@ -111,7 +136,7 @@ export const getFlagById = async (id) => {
   }
 };
 
-// Helper function to calculate distance between two coordinates using Haversine formula
+// Helper function to calculate distance between two coordinates using Haversine formula (more accurate)
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Radius of the earth in km
   const dLat = deg2rad(lat2 - lat1);

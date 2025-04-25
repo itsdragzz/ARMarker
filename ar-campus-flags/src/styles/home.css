@@ -1,119 +1,148 @@
 /* src/styles/home.css */
 .home-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
-  }
-  
-  .hero-section {
-    text-align: center;
-    margin-bottom: 40px;
-    padding: 40px 20px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-  }
-  
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.hero-section {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 40px 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.hero-section h1 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+.hero-section p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.primary-btn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.primary-btn:hover {
+  background-color: #2980b9;
+}
+
+.secondary-btn {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.secondary-btn:hover {
+  background-color: #27ae60;
+}
+
+.features-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.feature-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.feature-card h3 {
+  margin-bottom: 10px;
+  color: var(--primary-color);
+}
+
+.how-it-works {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 40px;
+}
+
+.how-it-works h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+.how-it-works ol {
+  margin-left: 20px;
+  line-height: 1.6;
+}
+
+.how-it-works li {
+  margin-bottom: 10px;
+}
+
+/* New AR tips section */
+.ar-tips {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 40px;
+}
+
+.ar-tips h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+.ar-tips ul {
+  margin-left: 20px;
+  line-height: 1.6;
+}
+
+.ar-tips li {
+  margin-bottom: 10px;
+}
+
+.ar-tips strong {
+  color: var(--primary-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
   .hero-section h1 {
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-    color: var(--primary-color);
+    font-size: 2rem;
   }
   
   .hero-section p {
-    font-size: 1.2rem;
-    margin-bottom: 30px;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  
-  .hero-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
+    font-size: 1rem;
   }
   
   .btn {
-    padding: 12px 24px;
-    border-radius: 4px;
-    font-weight: bold;
-    text-decoration: none;
-    transition: all 0.3s ease;
+    padding: 10px 20px;
+    font-size: 0.9rem;
   }
-  
-  .primary-btn {
-    background-color: var(--primary-color);
-    color: white;
-  }
-  
-  .primary-btn:hover {
-    background-color: #2980b9;
-  }
-  
-  .secondary-btn {
-    background-color: var(--secondary-color);
-    color: white;
-  }
-  
-  .secondary-btn:hover {
-    background-color: #27ae60;
-  }
-  
-  .features-section {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 40px;
-  }
-  
-  .feature-card {
-    background-color: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    text-align: center;
-  }
-  
-  .feature-card h3 {
-    margin-bottom: 10px;
-    color: var(--primary-color);
-  }
-  
-  .how-it-works {
-    background-color: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .how-it-works h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: var(--primary-color);
-  }
-  
-  .how-it-works ol {
-    margin-left: 20px;
-    line-height: 1.6;
-  }
-  
-  .how-it-works li {
-    margin-bottom: 10px;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .hero-section h1 {
-      font-size: 2rem;
-    }
-    
-    .hero-section p {
-      font-size: 1rem;
-    }
-    
-    .btn {
-      padding: 10px 20px;
-      font-size: 0.9rem;
-    }
-  }
+}
