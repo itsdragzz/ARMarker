@@ -29,6 +29,29 @@
   overflow: hidden;
   margin-bottom: 10px;
   height: calc(100vh - 200px);
+  touch-action: none; /* Prevent browser's default touch actions */
+}
+
+/* Zoom indicator - briefly appears when zooming */
+.zoom-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+  opacity: 0;
+  animation: fadeInOut 0.5s ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  50% { opacity: 0.7; }
+  100% { opacity: 0; }
 }
 
 .map-user-location {

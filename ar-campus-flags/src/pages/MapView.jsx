@@ -1,5 +1,5 @@
 // src/pages/MapView.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useGeolocation from '../hooks/useGeolocation';
 import FlagDetail from '../components/FlagDetail';
 import { getAllFlags } from '../services/api';
@@ -202,16 +202,17 @@ const MapView = () => {
     return (
       <div 
         className="simple-map" 
-        onWheel={handleWheel}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        ref={mapContainerRef}
       >
         <div className="map-zoom-controls">
           <button onClick={handleZoomIn} className="zoom-btn">+</button>
           <button onClick={handleZoomOut} className="zoom-btn">-</button>
           <button onClick={handleResetZoom} className="zoom-btn reset-btn">Reset</button>
           <span className="zoom-level">{zoomLevel.toFixed(1)}x</span>
+        </div>
+        
+        <div className="zoom-indicator" key={zoomLevel}>
+          {/* This div will briefly show when zoom level changes */}
         </div>
         
         <div className="map-user-location">
