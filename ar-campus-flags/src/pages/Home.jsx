@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import '../styles/home.css';
 
-const Home = () => {
+const Home = ({ onStartAR }) => {
   return (
     <div className="home-container">
       <div className="hero-section">
@@ -18,6 +18,9 @@ const Home = () => {
           <Link to="/create" className="btn secondary-btn">
             Create a Flag
           </Link>
+          <button className="btn outline-btn" onClick={onStartAR}>
+            Check Permissions
+          </button>
         </div>
       </div>
 
@@ -55,6 +58,19 @@ const Home = () => {
           <li><strong>Flag Count:</strong> The counter shows how many flags are visible out of the total nearby</li>
           <li><strong>Creating Flags:</strong> When creating a flag, point your camera in the direction you want the flag to appear</li>
         </ul>
+      </div>
+      
+      <div className="mobile-tips">
+        <h2>Having Issues?</h2>
+        <ul>
+          <li>Make sure you've granted all permissions (camera, location, and device motion)</li>
+          <li>Try refreshing the page if the map or AR view isn't loading</li>
+          <li>On iOS, you may need to go to Settings ➝ Safari ➝ Motion & Orientation Access and enable it</li>
+          <li>On Android, make sure location services are enabled in your system settings</li>
+        </ul>
+        <button className="btn permission-btn" onClick={onStartAR}>
+          Check and Update Permissions
+        </button>
       </div>
     </div>
   );

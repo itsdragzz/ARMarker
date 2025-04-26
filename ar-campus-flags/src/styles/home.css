@@ -40,6 +40,9 @@
   font-weight: bold;
   text-decoration: none;
   transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  font-size: 16px;
 }
 
 .primary-btn {
@@ -58,6 +61,16 @@
 
 .secondary-btn:hover {
   background-color: #27ae60;
+}
+
+.outline-btn {
+  background-color: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.outline-btn:hover {
+  background-color: rgba(52, 152, 219, 0.1);
 }
 
 .features-section {
@@ -103,7 +116,7 @@
   margin-bottom: 10px;
 }
 
-/* New AR tips section */
+/* AR tips section */
 .ar-tips {
   background-color: white;
   border-radius: 8px;
@@ -131,6 +144,43 @@
   color: var(--primary-color);
 }
 
+/* Mobile tips section */
+.mobile-tips {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 40px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.mobile-tips h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+.mobile-tips ul {
+  margin-left: 20px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.mobile-tips li {
+  margin-bottom: 10px;
+}
+
+.permission-btn {
+  background-color: var(--primary-color);
+  color: white;
+  display: block;
+  margin: 0 auto;
+}
+
+.permission-btn:hover {
+  background-color: #2980b9;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .hero-section h1 {
@@ -144,5 +194,12 @@
   .btn {
     padding: 10px 20px;
     font-size: 0.9rem;
+  }
+  
+  .hero-buttons {
+    flex-direction: column;
+    gap: 10px;
+    max-width: 250px;
+    margin: 0 auto;
   }
 }

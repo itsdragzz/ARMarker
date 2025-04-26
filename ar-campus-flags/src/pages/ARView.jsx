@@ -4,7 +4,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import useGeolocation from '../hooks/useGeolocation';
 import useCamera from '../hooks/useCamera';
-import useDeviceOrientation from '../hooks/useDeviceOrientation'; // New hook we'll create
+import useDeviceOrientation from '../hooks/useDeviceOrientation';
 import Flag3D from '../components/Flag3D';
 import FlagDetail from '../components/FlagDetail';
 import { getFlagsNearLocation } from '../services/api';
@@ -13,20 +13,34 @@ import '../styles/arview.css';
 // Distance in meters that flags will be visible
 const VISIBILITY_RADIUS = 10;
 
-const ARView = () => {
+const ARView = ({ showPermissionPrompt }) => {
   const { videoRef, hasPermission, error: cameraError, startCamera } = useCamera();
-  const { location, error: geoError } = useGeolocation();
-  const { orientation, error: orientationError } = useDeviceOrientation();
+  const { location, loading: locationLoading, error: geoError } = useGeolocation();
+  const { orientation, error: orientationError, requestPermission } = useDeviceOrientation({
+    requestPermissionOnMount: true
+  });
+  
   const [flags, setFlags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFlag, setSelectedFlag] = useState(null);
   const lastFetchRef = useRef(null);
+  const arContainerRef = useRef(null);
 
+  // Request permissions when component mounts
   useEffect(() => {
-    // Start the camera when component mounts
+    // Start the camera
     startCamera();
-  }, []);
+    
+    // Request device orientation permission
+    requestPermission();
+    
+    // If there are errors with permissions, prompt the user
+    if (cameraError || geoError || orientationError) {
+      showPermissionPrompt && showPermissionPrompt();
+    }
+  }, [cameraError, geoError, orientationError]);
 
+  // Fetch flags when location changes
   useEffect(() => {
     // Only fetch flags when we have location data
     if (location) {
@@ -98,7 +112,7 @@ const ARView = () => {
     
     // Vertical positioning based on device tilt (beta)
     // If phone is pointed at horizon (beta = 90), flags appear midway in the view
-    const verticalTilt = (90 - orientation.beta) * 0.05;
+    const verticalTilt = (90 - (orientation.beta || 90)) * 0.05;
     
     // Distance affects the Z position (depth)
     const distance = Math.sqrt(northSouth * northSouth + eastWest * eastWest);
@@ -138,7 +152,7 @@ const ARView = () => {
     
     // Consider original flag orientation if it exists
     // This makes flags appear in the direction they were placed
-    if (flag.orientation && flag.orientation.alpha) {
+    if (flag.orientation && flag.orientation.alpha !== undefined) {
       // Calculate how much the viewing angle differs from the placement angle
       const placementAngleDiff = (orientation.alpha - flag.orientation.alpha) % 360;
       
@@ -164,41 +178,43 @@ const ARView = () => {
     setSelectedFlag(null);
   };
   
+  // Handle permission requests
+  const handleRequestPermissions = () => {
+    showPermissionPrompt && showPermissionPrompt();
+  };
+  
   // Calculate the number of visible flags
   const visibleFlagsCount = flags.filter(flag => isFlagVisible(flag)).length;
 
-  if (geoError) {
+  // If there are errors with permissions, show error messages
+  if (cameraError || geoError || orientationError) {
     return (
       <div className="ar-error">
-        <h2>Location Error</h2>
-        <p>{geoError}</p>
-        <p>Please enable location services to use the AR feature.</p>
+        <h2>Permission Required</h2>
+        {cameraError && <p>Camera: {cameraError}</p>}
+        {geoError && <p>Location: {geoError}</p>}
+        {orientationError && <p>Device Motion: {orientationError}</p>}
+        <p>Please allow all required permissions to use the AR feature.</p>
+        <button onClick={handleRequestPermissions} className="permission-button">
+          Update Permissions
+        </button>
       </div>
     );
   }
 
-  if (cameraError) {
+  // If location or orientation isn't available, show a loading state
+  if (!location || !orientation) {
     return (
-      <div className="ar-error">
-        <h2>Camera Error</h2>
-        <p>{cameraError}</p>
-        <p>Please allow camera access to use the AR feature.</p>
-      </div>
-    );
-  }
-
-  if (orientationError) {
-    return (
-      <div className="ar-error">
-        <h2>Orientation Error</h2>
-        <p>{orientationError}</p>
-        <p>Please allow motion and orientation access to use the AR feature.</p>
+      <div className="ar-loading-fullscreen">
+        <div className="loader"></div>
+        <p>{!location ? 'Getting your location...' : 'Setting up device orientation...'}</p>
+        <small>This may take a moment. Please make sure permissions are granted.</small>
       </div>
     );
   }
 
   return (
-    <div className="ar-container">
+    <div className="ar-container" ref={arContainerRef}>
       {/* Video background from camera */}
       <video
         ref={videoRef}
