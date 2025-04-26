@@ -1,37 +1,49 @@
 // src/pages/MapView.jsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import useGeolocation from '../hooks/useGeolocation';
 import FlagDetail from '../components/FlagDetail';
 import { getAllFlags } from '../services/api';
 import '../styles/mapview.css';
 
 const MapView = () => {
-  const { location, loading: locationLoading } = useGeolocation();
+  const { location } = useGeolocation();
   const [flags, setFlags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFlag, setSelectedFlag] = useState(null);
   const [error, setError] = useState(null);
-  const mapContainerRef = useRef(null);
-  
   // Define the radius in kilometers
-  const displayRadius = 0.5; // Reduced to 500m for better visibility
+  const displayRadius = 2; // 2km radius
 
   useEffect(() => {
     const fetchFlags = async () => {
       try {
-        setLoading(true);
         const data = await getAllFlags();
-        setFlags(data);
+        // Filter flags within our radius
+        const localFlags = data.filter(flag => {
+          if (location && flag.latitude && flag.longitude) {
+            const distance = calculateDistance(
+              location.latitude,
+              location.longitude,
+              flag.latitude,
+              flag.longitude
+            );
+            return distance <= displayRadius;
+          }
+          return false;
+        });
+        setFlags(localFlags);
       } catch (err) {
-        console.error('Error fetching flags:', err);
         setError('Failed to load flags. Please try again later.');
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFlags();
-  }, []);
+    if (location) {
+      fetchFlags();
+    }
+  }, [location]);
 
   // Helper function to calculate distance between two coordinates
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -51,79 +63,45 @@ const MapView = () => {
     return deg * (Math.PI/180);
   }
 
-  // Get nearby flags based on location
-  const getNearbyFlags = () => {
-    if (!location) return [];
-    
-    return flags.filter(flag => {
-      if (flag.latitude && flag.longitude) {
-        const distance = calculateDistance(
-          location.latitude,
-          location.longitude,
-          flag.latitude,
-          flag.longitude
-        );
-        return distance <= displayRadius;
-      }
-      return false;
-    });
-  };
-
-  const nearbyFlags = location ? getNearbyFlags() : [];
-
+  // Very simple map implementation - in a real app, you would use a proper map library like Leaflet or Google Maps
   const renderSimpleMap = () => {
     if (!location) {
       return (
         <div className="map-placeholder">
           <p>Waiting for your location...</p>
-          <div className="loader"></div>
         </div>
       );
     }
 
-    // Size the map container based on viewport
-    const mapSize = Math.min(
-      mapContainerRef.current ? mapContainerRef.current.offsetWidth - 40 : 300,
-      window.innerHeight * 0.6
-    );
-    
-    // Calculate scaling factor (pixels per meter)
-    // If displayRadius is 0.5km (500m), then mapSize/2 should represent 500m
-    const metersPerPixel = (displayRadius * 1000) / (mapSize / 2);
+    // Calculate scaling factor for flag positions
+    // We want flags at the edge of our radius to be at the edge of our visible area
+    // Using a higher scale factor makes the flags appear more spread out
+    const scaleFactor = 250 / displayRadius; // Scale to represent the radius visually
     
     return (
-      <div 
-        className="simple-map"
-        ref={mapContainerRef}
-        style={{ height: `${mapSize}px`, width: `${mapSize}px`, margin: '0 auto' }}
-      >
-        {/* User location marker */}
-        <div className="user-marker">
-          <div className="user-dot"></div>
-          <div className="user-pulse"></div>
+      <div className="simple-map">
+        <div className="map-user-location">
+          <div className="user-marker"></div>
+          <div className="user-radius" style={{ width: `${scaleFactor * 2}px`, height: `${scaleFactor * 2}px` }}></div>
         </div>
-        
-        {/* Radius circle */}
-        <div className="user-radius"></div>
-        
-        {/* Render flags */}
-        {nearbyFlags.map(flag => {
-          // Calculate relative position
-          const latDiff = flag.latitude - location.latitude;
-          const lngDiff = flag.longitude - location.longitude;
+
+        {flags.map(flag => {
+          // Calculate relative position with improved scaling for local view
+          const latDiff = (flag.latitude - location.latitude);
+          const lngDiff = (flag.longitude - location.longitude);
           
-          // Convert to meters
-          const metersPerLat = 111320; // meters per degree latitude
-          const metersPerLng = 111320 * Math.cos(location.latitude * (Math.PI / 180));
+          // Apply scaling factor to make distances more visually apparent
+          const offsetX = lngDiff * scaleFactor * 111; // ~111km per degree of longitude at equator
+          const offsetY = latDiff * scaleFactor * 111; // ~111km per degree of latitude
           
-          const northSouth = latDiff * metersPerLat;  // positive is north
-          const eastWest = lngDiff * metersPerLng;    // positive is east
-          
-          // Convert meters to pixels
-          const posY = (mapSize / 2) - (northSouth / metersPerPixel);
-          const posX = (mapSize / 2) + (eastWest / metersPerPixel);
-          
-          // Calculate distance
+          // Style to position the flag on our simple map
+          const flagStyle = {
+            left: `calc(50% + ${offsetX}px)`,
+            top: `calc(50% - ${offsetY}px)`,
+            backgroundColor: flag.color || '#3498db'
+          };
+
+          // Calculate the distance to this flag
           const distance = calculateDistance(
             location.latitude,
             location.longitude,
@@ -131,42 +109,27 @@ const MapView = () => {
             flag.longitude
           );
           
-          // Format distance
-          const distanceText = distance < 0.1 
-            ? `${Math.round(distance * 1000)}m` 
-            : `${distance.toFixed(1)}km`;
-          
-          // Only render if within the map bounds
-          if (posX >= 0 && posX <= mapSize && posY >= 0 && posY <= mapSize) {
-            return (
-              <div
-                key={flag.id}
-                className="map-flag"
-                style={{
-                  left: `${posX}px`,
-                  top: `${posY}px`,
-                }}
-                onClick={() => setSelectedFlag(flag)}
-              >
-                <div 
-                  className="map-flag-icon"
-                  style={{ backgroundColor: flag.color || '#3498db' }}
-                ></div>
-                <div className="map-flag-distance">{distanceText}</div>
-              </div>
-            );
+          // Format distance for display
+          let distanceLabel = "";
+          if (distance < 0.1) {
+            distanceLabel = `${Math.round(distance * 1000)}m`;
+          } else {
+            distanceLabel = `${distance.toFixed(1)}km`;
           }
-          
-          return null;
+
+          return (
+            <div
+              key={flag.id}
+              className="map-flag"
+              style={flagStyle}
+              onClick={() => setSelectedFlag(flag)}
+              title={`${flag.title || 'Flag'} (${distanceLabel})`}
+            >
+              <div className="map-flag-icon"></div>
+              <div className="map-flag-distance">{distanceLabel}</div>
+            </div>
+          );
         })}
-        
-        {/* Compass directions */}
-        <div className="map-compass">
-          <div className="compass-direction north">N</div>
-          <div className="compass-direction east">E</div>
-          <div className="compass-direction south">S</div>
-          <div className="compass-direction west">W</div>
-        </div>
       </div>
     );
   };
@@ -175,19 +138,15 @@ const MapView = () => {
     <div className="map-container">
       <div className="map-header">
         <h2>Campus Flags Map</h2>
-        {locationLoading ? (
-          <p>Locating you...</p>
-        ) : location ? (
-          <p className="location-coordinates">
-            Your location: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-          </p>
-        ) : (
-          <p className="location-error">Unable to get your location</p>
-        )}
-        <p className="map-radius-info">Showing flags within {displayRadius * 1000}m radius</p>
+        <p>
+          {location
+            ? `Your location: ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`
+            : 'Locating you...'}
+        </p>
+        <p className="map-radius-info">Showing flags within {displayRadius}km radius</p>
       </div>
 
-      {loading && !location ? (
+      {loading ? (
         <div className="map-loading">
           <div className="loader"></div>
           <p>Loading map...</p>
@@ -208,7 +167,7 @@ const MapView = () => {
       )}
 
       <div className="map-footer">
-        <p>Found {nearbyFlags.length} flags nearby</p>
+        <p>Found {flags.length} flags nearby</p>
         <small>Click on a flag to view details</small>
       </div>
     </div>

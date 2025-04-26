@@ -26,13 +26,11 @@ const CATEGORIES = [
   'Other',
 ];
 
-const CreateFlag = ({ showPermissionPrompt }) => {
+const CreateFlag = () => {
   const navigate = useNavigate();
-  const { location, loading: locationLoading, error: locationError } = useGeolocation();
-  const { videoRef, startCamera, stopCamera, error: cameraError } = useCamera();
-  const { orientation, error: orientationError, requestPermission } = useDeviceOrientation({
-    requestPermissionOnMount: false
-  });
+  const { location, loading: locationLoading } = useGeolocation();
+  const { videoRef, startCamera, stopCamera } = useCamera();
+  const { orientation, error: orientationError } = useDeviceOrientation();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -46,23 +44,8 @@ const CreateFlag = ({ showPermissionPrompt }) => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [permissionRequested, setPermissionRequested] = useState(false);
-  
-  // Request permissions whenever needed
-  useEffect(() => {
-    if (isPreviewMode && !permissionRequested) {
-      requestPermission();
-      setPermissionRequested(true);
-    }
-    
-    // If there are permission errors, show the permission prompt
-    if ((locationError || cameraError || orientationError) && !permissionRequested) {
-      showPermissionPrompt && showPermissionPrompt();
-      setPermissionRequested(true);
-    }
-  }, [isPreviewMode, locationError, cameraError, orientationError, permissionRequested]);
 
-  // Start/stop camera based on preview mode
+  // Start camera for preview
   useEffect(() => {
     if (isPreviewMode) {
       startCamera();
@@ -91,14 +74,6 @@ const CreateFlag = ({ showPermissionPrompt }) => {
   };
 
   const togglePreviewMode = () => {
-    setError('');
-    
-    // If we don't have location or orientation, try to get permissions first
-    if (!location || !orientation) {
-      showPermissionPrompt && showPermissionPrompt();
-      return;
-    }
-    
     setIsPreviewMode(!isPreviewMode);
   };
 
@@ -109,13 +84,11 @@ const CreateFlag = ({ showPermissionPrompt }) => {
     
     if (!location) {
       setError('Location is not available. Please enable location services.');
-      showPermissionPrompt && showPermissionPrompt();
       return;
     }
     
     if (!orientation) {
       setError('Device orientation is not available. Please enable device motion and orientation services.');
-      showPermissionPrompt && showPermissionPrompt();
       return;
     }
     
@@ -169,17 +142,12 @@ const CreateFlag = ({ showPermissionPrompt }) => {
     }
   };
 
-  // Handle permission request
-  const handleRequestPermissions = () => {
-    showPermissionPrompt && showPermissionPrompt();
-  };
-
   return (
     <div className="create-flag-container">
       <h2>Create a New Flag</h2>
       
       {/* Location and orientation status */}
-      <div className={`location-status ${(locationError || orientationError) ? 'with-error' : ''}`}>
+      <div className="location-status">
         {locationLoading ? (
           <p>Getting your location...</p>
         ) : location ? (
@@ -192,12 +160,6 @@ const CreateFlag = ({ showPermissionPrompt }) => {
           <p>🧭 Device orientation ready (Facing: {Math.round(orientation.alpha)}°)</p>
         ) : (
           <p className="error">⚠️ Unable to get device orientation</p>
-        )}
-        
-        {(locationError || orientationError) && (
-          <button className="permission-btn" onClick={handleRequestPermissions}>
-            Grant Permissions
-          </button>
         )}
       </div>
       
@@ -229,7 +191,7 @@ const CreateFlag = ({ showPermissionPrompt }) => {
           
           {orientation && (
             <div className="orientation-info">
-              Compass: {Math.round(orientation.alpha)}° | Tilt: {Math.round(orientation.beta || 0)}°
+              Compass: {Math.round(orientation.alpha)}° | Tilt: {Math.round(orientation.beta)}°
             </div>
           )}
           
@@ -323,9 +285,8 @@ const CreateFlag = ({ showPermissionPrompt }) => {
               type="button"
               className="preview-btn"
               onClick={togglePreviewMode}
-              disabled={!location || !orientation}
             >
-              {!location || !orientation ? 'Permissions Required' : 'Preview'}
+              Preview
             </button>
             
             <button
