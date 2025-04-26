@@ -2,7 +2,6 @@
 import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
-import * as THREE from 'three';
 
 const Flag3D = ({ position, message, color = '#3498db', onClick }) => {
   const flagRef = useRef();
@@ -20,16 +19,18 @@ const Flag3D = ({ position, message, color = '#3498db', onClick }) => {
     return Math.max(0.5, Math.min(2, 2 / Math.max(1, distance * 0.2)));
   }, [distance]);
   
-  // Animate the flag slightly
+  // Animate the flag slightly and keep it upright
   useFrame(({ clock }) => {
-    if (flagRef.current) {
+    if (flagRef.current && groupRef.current) {
       // Gentle wave animation
-      flagRef.current.position.y = Math.sin(clock.getElapsedTime() * 2) * 0.05 + position[1] + 0.5;
+      flagRef.current.position.y = Math.sin(clock.getElapsedTime() * 2) * 0.05 + 0.5;
       
-      // Always face the camera (billboarding)
-      if (groupRef.current) {
-        groupRef.current.lookAt(0, 0, 0);
-      }
+      // Always face the camera (billboarding) but keep Y-axis upright
+      groupRef.current.lookAt(0, groupRef.current.position.y, 0);
+      
+      // Force the group to stay upright
+      groupRef.current.rotation.x = 0;
+      groupRef.current.rotation.z = 0;
     }
   });
 
@@ -41,7 +42,7 @@ const Flag3D = ({ position, message, color = '#3498db', onClick }) => {
       scale={[scale, scale, scale]}
     >
       {/* Flag pole */}
-      <mesh ref={poleRef}>
+      <mesh ref={poleRef} position={[0, 0, 0]}>
         <cylinderGeometry args={[0.03, 0.03, 1.5, 8]} />
         <meshStandardMaterial color="#8B4513" />
       </mesh>

@@ -12,6 +12,8 @@ import '../styles/arview.css';
 
 // Distance in meters that flags will be visible
 const VISIBILITY_RADIUS = 10;
+// Field of view in degrees (how wide the camera can see)
+const FIELD_OF_VIEW = 60;
 
 const ARView = () => {
   const {
@@ -65,6 +67,7 @@ const ARView = () => {
     startCamera();
   }, []);
 
+  // Add this to your existing flag fetching useEffect
   useEffect(() => {
     // Only fetch flags when we have location data
     if (location) {
@@ -83,6 +86,21 @@ const ARView = () => {
             location.longitude,
             VISIBILITY_RADIUS // Fetch flags within 10 meter radius
           );
+
+          // Preserve visibility state when updating flags
+          const oldFlagIds = new Set(flags.map(f => f.id));
+          const newFlagIds = new Set(nearbyFlags.map(f => f.id));
+
+          // Keep track of flags that are still in range
+          const persistentFlagIds = new Set(
+            [...oldFlagIds].filter(id => newFlagIds.has(id))
+          );
+
+          // Update visible flags reference to only include flags that are still in range
+          visibleFlagsRef.current = new Set(
+            [...visibleFlagsRef.current].filter(id => persistentFlagIds.has(id))
+          );
+
           setFlags(nearbyFlags);
         } catch (error) {
           console.error('Error fetching nearby flags:', error);
@@ -102,11 +120,11 @@ const ARView = () => {
 
       return () => clearInterval(interval);
     }
-  }, [location]);
+  }, [location, flags]);
 
-  // Calculate flag positions relative to user location and orientation
+  // Calculate flag positions relative to user location and orientation - IMPROVED
   const getFlagPosition = (flag) => {
-    if (!location || !orientation) return [0, 0, 0];
+    if (!location || !orientation) return [0, 0, -5]; // Default position if no location/orientation
 
     // Calculate distance and angle from current position to flag
     const latDiff = flag.latitude - location.latitude;
@@ -124,33 +142,30 @@ const ARView = () => {
     const angleToFlag = Math.atan2(eastWest, northSouth) * (180 / Math.PI);
 
     // Calculate the difference between device direction and flag direction
-    // If the compass shows 0 (north) and the flag is at 90 (east), the difference is 90
     let angleDiff = (angleToFlag - orientation.alpha) % 360;
     if (angleDiff > 180) angleDiff -= 360;
     if (angleDiff < -180) angleDiff += 360;
 
     // Position flag based on the viewing angle
-    // The angle difference affects the X position (left-right)
-    // The lower the difference, the more centered the flag
-    const horizontalPosition = angleDiff * 0.1; // Scale angle difference to reasonable coordinates
+    // Scale down angle influence to make positioning more stable
+    const horizontalPosition = angleDiff * 0.05;
 
-    // Vertical positioning based on device tilt (beta)
-    // If phone is pointed at horizon (beta = 90), flags appear midway in the view
-    const verticalTilt = (90 - orientation.beta) * 0.05;
+    // Use fixed vertical position for stability
+    const verticalPosition = -0.5; // Slightly below eye level
 
     // Distance affects the Z position (depth)
     const distance = Math.sqrt(northSouth * northSouth + eastWest * eastWest);
-    // Scale down distance for visualization
-    const scaledDistance = Math.min(distance / 2, 15); // Limit max distance
+    // Scale down distance for visualization but keep it consistent
+    const scaledDistance = Math.min(Math.max(distance / 3, 2), 15);
 
-    return [horizontalPosition, verticalTilt, -scaledDistance];
+    return [horizontalPosition, verticalPosition, -scaledDistance];
   };
 
-  // Determine if a flag should be visible based on viewing angle
+  // Determine if a flag should be visible based on viewing angle - IMPROVED
   const isFlagVisible = (flag) => {
     if (!location || !orientation) return false;
 
-    // Calculate angle to flag as above
+    // Calculate angle to flag
     const latDiff = flag.latitude - location.latitude;
     const lngDiff = flag.longitude - location.longitude;
 
@@ -174,22 +189,21 @@ const ARView = () => {
     if (angleDiff > 180) angleDiff -= 360;
     if (angleDiff < -180) angleDiff += 360;
 
-    // Consider original flag orientation if it exists
-    // This makes flags appear in the direction they were placed
-    if (flag.orientation && flag.orientation.alpha) {
-      // Calculate how much the viewing angle differs from the placement angle
-      const placementAngleDiff = (orientation.alpha - flag.orientation.alpha) % 360;
+    // Add hysteresis to prevent flickering
+    // If the flag was visible in the last frame, keep it visible even if it's slightly out of view
+    const isCurrentlyVisible = Math.abs(angleDiff) < (FIELD_OF_VIEW / 2);
+    const wasVisible = visibleFlagsRef.current.has(flag.id);
 
-      // Adjust the angle difference calculation
-      // This makes flags appear more prominently when viewed from the original angle
-      if (Math.abs(placementAngleDiff) < 45) {
-        // When looking from the original angle, make the flag more visible
-        angleDiff = angleDiff * (1 - (45 - Math.abs(placementAngleDiff)) / 90);
-      }
+    if (isCurrentlyVisible) {
+      visibleFlagsRef.current.add(flag.id);
+      return true;
+    } else if (wasVisible && Math.abs(angleDiff) < (FIELD_OF_VIEW / 2 + 10)) {
+      // Keep visible if it was visible and is still close to the field of view
+      return true;
+    } else {
+      visibleFlagsRef.current.delete(flag.id);
+      return false;
     }
-
-    // Determine if the flag is within the field of view (approx 60 degrees)
-    return Math.abs(angleDiff) < 30;
   };
 
   // Handle flag click
@@ -267,6 +281,7 @@ const ARView = () => {
         muted
         style={{ objectFit: 'cover' }}
       />
+
 
       {/* 3D overlay with flags */}
       <div className="ar-overlay">

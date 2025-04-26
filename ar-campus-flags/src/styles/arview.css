@@ -281,3 +281,27 @@
   margin: 3px 0;
   font-size: 11px;
 }
+.ar-overlay canvas {
+  pointer-events: auto;
+  image-rendering: high-quality;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.compass-indicator {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  z-index: 103;
+  transition: transform 0.3s ease;
+  transform-origin: center center;
+  will-change: transform;
+}
