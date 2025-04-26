@@ -201,3 +201,83 @@
     left: 10px;
   }
 }
+.ar-permission {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 20px;
+  text-align: center;
+  background-color: #f8f9fa;
+}
+
+.permission-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  margin: 20px 0;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.permission-btn:hover {
+  background-color: #2980b9;
+}
+
+.permission-note {
+  color: #666;
+  max-width: 400px;
+  text-align: center;
+}
+
+.permission-container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+}
+.debug-overlay {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 9999;
+}
+
+.debug-button {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.debug-info {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-top: 5px;
+  display: none;
+  max-width: 200px;
+}
+.debug-info.show {
+  display: block;
+}
+
+.debug-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+}
+
+.debug-info p {
+  margin: 3px 0;
+  font-size: 11px;
+}
