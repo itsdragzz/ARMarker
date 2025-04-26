@@ -1,4 +1,4 @@
-// src/pages/ARView.jsx - update the component
+// src/pages/ARView.jsx
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -31,6 +31,8 @@ const ARView = () => {
   const [loading, setLoading] = useState(true);
   const [selectedFlag, setSelectedFlag] = useState(null);
   const lastFetchRef = useRef(null);
+  // Initialize the visibleFlagsRef 
+  const visibleFlagsRef = useRef(new Set());
 
   // Add a new useEffect for camera initialization that runs on first render
   useEffect(() => {
@@ -65,6 +67,11 @@ const ARView = () => {
   useEffect(() => {
     // Start the camera when component mounts
     startCamera();
+    
+    // Clean up function to clear visibleFlagsRef when component unmounts
+    return () => {
+      visibleFlagsRef.current.clear();
+    };
   }, []);
 
   // Add this to your existing flag fetching useEffect
@@ -86,6 +93,8 @@ const ARView = () => {
             location.longitude,
             VISIBILITY_RADIUS // Fetch flags within 10 meter radius
           );
+
+          console.log("Fetched nearby flags:", nearbyFlags.length);
 
           // Preserve visibility state when updating flags
           const oldFlagIds = new Set(flags.map(f => f.id));
@@ -120,7 +129,7 @@ const ARView = () => {
 
       return () => clearInterval(interval);
     }
-  }, [location, flags]);
+  }, [location]);
 
   // Calculate flag positions relative to user location and orientation - IMPROVED
   const getFlagPosition = (flag) => {
@@ -282,7 +291,6 @@ const ARView = () => {
         style={{ objectFit: 'cover' }}
       />
 
-
       {/* 3D overlay with flags */}
       <div className="ar-overlay">
         <Canvas>
@@ -290,17 +298,18 @@ const ARView = () => {
           <directionalLight position={[0, 10, 5]} intensity={1} />
 
           <Suspense fallback={null}>
-            {flags.map((flag) => (
-              isFlagVisible(flag) && (
+            {flags.map((flag) => {
+              const visible = isFlagVisible(flag);
+              return visible ? (
                 <Flag3D
                   key={flag.id}
                   position={getFlagPosition(flag)}
-                  message={flag.message}
+                  message={flag.message || "Flag message"}
                   color={flag.color || '#3498db'}
                   onClick={() => handleFlagClick(flag)}
                 />
-              )
-            ))}
+              ) : null;
+            })}
           </Suspense>
 
           <OrbitControls enableZoom={false} enablePan={false} />
@@ -374,7 +383,6 @@ const ARView = () => {
         </div>
       </div>
     </div>
-
   );
 };
 

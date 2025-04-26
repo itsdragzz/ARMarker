@@ -32,7 +32,7 @@ export const getAllFlags = async () => {
   }
 };
 
-// Get flags near a location - improved with more accurate distance calculation
+// Get flags near a location - improved with more accurate distance calculation and better logging
 export const getFlagsNearLocation = async (latitude, longitude, radius = 10) => {
   try {
     // For a hackathon, we still use a simpler approach
@@ -43,7 +43,10 @@ export const getFlagsNearLocation = async (latitude, longitude, radius = 10) => 
     
     // Filter flags that are within the radius (in meters)
     const nearbyFlags = flags.filter(flag => {
-      if (!flag.latitude || !flag.longitude) return false;
+      if (!flag.latitude || !flag.longitude) {
+        console.log(`Skipping flag ${flag.id} due to missing coordinates`);
+        return false;
+      }
       
       // Calculate distance using Haversine formula
       const distance = calculateDistance(
@@ -56,10 +59,20 @@ export const getFlagsNearLocation = async (latitude, longitude, radius = 10) => 
       // Convert km to meters
       const distanceInMeters = distance * 1000;
       
-      return distanceInMeters <= radius;
+      const isNearby = distanceInMeters <= radius;
+      if (isNearby) {
+        console.log(`Flag ${flag.id} is within range: ${distanceInMeters.toFixed(2)}m`);
+      }
+      
+      return isNearby;
     });
     
-    console.log(`Found ${nearbyFlags.length} flags within ${radius}m`);
+    console.log(`Found ${nearbyFlags.length} flags within ${radius}m radius`);
+    
+    // Log details of each nearby flag for debugging
+    nearbyFlags.forEach(flag => {
+      console.log(`Nearby flag: ${flag.id}, title: ${flag.title || 'Untitled'}, coords: [${flag.latitude}, ${flag.longitude}]`);
+    });
     
     return nearbyFlags;
   } catch (error) {
@@ -99,9 +112,18 @@ export const createFlag = async (flagData) => {
       createdAt: Timestamp.now()
     };
     
+    console.log("Creating flag with data:", {
+      lat: newFlag.latitude,
+      lng: newFlag.longitude, 
+      orientation: newFlag.orientation,
+      title: newFlag.title || 'Untitled'
+    });
+    
     // Add to Firestore collection
     const flagsRef = collection(db, 'flags');
     const docRef = await addDoc(flagsRef, newFlag);
+    
+    console.log(`Flag created successfully with ID: ${docRef.id}`);
     
     return {
       id: docRef.id,
